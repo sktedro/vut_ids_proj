@@ -1,5 +1,9 @@
 -- Authors: Dziyana Khrystsiuk (xkhrys00), Patrik Skaloš (xskalo01)
 
+-- TODO:
+-- What to do with attributes which cannot be null (NOT NULL) but we want to
+-- keep their parent table when references get deleted (ON DELETE SET NULL)?
+
 -- Clear old table data if there is any
 
 DROP TABLE "order_content";
@@ -24,9 +28,9 @@ DROP TABLE "jail" CASCADE CONSTRAINTS;
 CREATE TABLE "jail" (
     "id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     "region" VARCHAR(64),
-    "city" VARCHAR(64),
-    "zip" NUMBER(5, 0),
-    "street" VARCHAR(64),
+    "city" VARCHAR(64) NOT NULL,
+    "zip" NUMBER(5, 0) NOT NULL,
+    "street" VARCHAR(64) NOT NULL,
     "street_number" INT NOT NULL
 );
 
@@ -37,15 +41,15 @@ CREATE TABLE "warden" (
     "jail_id" INT NOT NULL,
     CONSTRAINT "warden_jail_id_pk"
             FOREIGN KEY ("jail_id") REFERENCES "jail" ("id")
-            ON DELETE SET NULL
-            -- the warden might be transferred but still a friend of a smuggler
+            ON DELETE CASCADE
 );
 
 CREATE TABLE "shift" (
     "id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     "start_datetime" TIMESTAMP(0) NOT NULL,
     "end_datetime" TIMESTAMP(0) NOT NULL,
-    CONSTRAINT "check_shift_datetime" CHECK ("end_datetime" > "start_datetime")
+    CONSTRAINT "check_shift_datetime"
+            CHECK ("start_datetime" < "end_datetime")
 );
 
 CREATE TABLE "oversees" (
@@ -65,12 +69,12 @@ CREATE TABLE "smuggler" (
     "name" VARCHAR(64) NOT NULL,
     "surname" VARCHAR(64) NOT NULL,
     "phone_number" VARCHAR(13) NOT NULL,
-    "iban" VARCHAR2(34),
+    "iban" VARCHAR2(34), -- We don't need his IBAN if he doesn't want to get paid
     "birth_number" NUMBER(10, 0) NOT NULL,
     CONSTRAINT "phone_number_check"
             CHECK (REGEXP_LIKE("phone_number", '^+\d{12}$')),
     CONSTRAINT "iban_length_check"
-            CHECK (LENGTH("iban") = '34')
+            CHECK (REGEXP_LIKE("iban", '^[A-Z]{2}\d+$') AND LENGTH("iban") <= 34)
 );
 
 CREATE TABLE "agreement" (
@@ -110,13 +114,15 @@ CREATE TABLE "customer" (
             -- the customer might be transferred to a different one
 );
 
-CREATE TABLE "order"(
+CREATE TABLE "order" (
     "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
     "order_datetime" TIMESTAMP(0) NOT NULL,
     "delivery_datetime" TIMESTAMP(0),
     "delivery_method" VARCHAR(64),
     "smuggler_id" INT NOT NULL,
     "customer_id" INT NOT NULL,
+    CONSTRAINT "check_order_datetime"
+            CHECK ("order_datetime" < "delivery_datetime"),
     CONSTRAINT "order_smuggler_id_pk"
             FOREIGN KEY ("smuggler_id") REFERENCES "smuggler" ("id")
             ON DELETE SET NULL,
@@ -136,9 +142,9 @@ CREATE TABLE "ingredient" (
     "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
     "current_amount" INT NOT NULL,
-    "unit" VARCHAR(3) NOT NULL
-            CHECK("unit" IN ('pcs', 'g', 'kg', 'l', 'ml')),
-    "purchase_price" NUMBER(*,2) NOT NULL
+    "unit" VARCHAR(4) NOT NULL
+            CHECK("unit" IN ('pcs', 'g', 'kg', 'ml', 'l', 'mm', 'm', 'mm^2', 'm^2')),
+    "wholesale_price" NUMBER(*, 4) NOT NULL
 );
 
 CREATE TABLE "pastry_ingredients" (
@@ -147,7 +153,7 @@ CREATE TABLE "pastry_ingredients" (
     PRIMARY KEY ("pastry_id","ingredient_id"),
     CONSTRAINT "pastry_ingredients_ingredient_id_fk"
             FOREIGN KEY ("ingredient_id") REFERENCES "ingredient" ("id")
-            ON DELETE CASCADE, -- TODO cascade? Are we sure?
+            ON DELETE CASCADE,
     CONSTRAINT "pastry_ingredients_pastry_id_fk"
             FOREIGN KEY ("pastry_id") REFERENCES "pastry" ("id")
             ON DELETE CASCADE
@@ -201,4 +207,3 @@ CREATE TABLE "order_content" (
 
 -- INSERT INTO "smuggler" ("name", "surname", "phone_number", "iban", "birth_number")
 --     VALUES ('patrik', 'skalos', '+421944306657', 'SK1235421', 1010567890);
-
