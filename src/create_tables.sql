@@ -2,31 +2,24 @@
 
 -- Clear old table data if there is any
 
-DROP TABLE "customer";
-DROP TABLE "employment";
-DROP TABLE "agreement";
-DROP TABLE "smuggler";
-DROP TABLE "oversees";
-DROP TABLE "warden";
-DROP TABLE "jail";
-DROP TABLE "ingredient_allergen";
-DROP TABLE "pastry_ingredients";
 DROP TABLE "order_content";
+DROP TABLE "item";
+DROP TABLE "ingredient_allergen";
 DROP TABLE "allergen";
+DROP TABLE "pastry_ingredients";
 DROP TABLE "ingredient";
 DROP TABLE "pastry";
 DROP TABLE "order";
-DROP TABLE "item";
+DROP TABLE "customer";
+DROP TABLE "partnership";
+DROP TABLE "agreement";
+DROP TABLE "smuggler" CASCADE CONSTRAINTS;
+DROP TABLE "oversees";
 DROP TABLE "shift";
+DROP TABLE "warden";
+DROP TABLE "jail" CASCADE CONSTRAINTS;
 
 -- Create new tables
-
-CREATE TABLE "shift" (
-    "id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    "start_datetime" TIMESTAMP(0) NOT NULL,
-    "end_datetime" TIMESTAMP(0) NOT NULL,
-    CONSTRAINT "check_shift_datetime" CHECK ("end_datetime" > "start_datetime")
-);
 
 CREATE TABLE "jail" (
     "id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
@@ -44,7 +37,15 @@ CREATE TABLE "warden" (
     "jail_id" INT NOT NULL,
     CONSTRAINT "warden_jail_id_pk"
             FOREIGN KEY ("jail_id") REFERENCES "jail" ("id")
-            ON DELETE CASCADE
+            ON DELETE SET NULL
+            -- the warden might be transferred but still a friend of a smuggler
+);
+
+CREATE TABLE "shift" (
+    "id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    "start_datetime" TIMESTAMP(0) NOT NULL,
+    "end_datetime" TIMESTAMP(0) NOT NULL,
+    CONSTRAINT "check_shift_datetime" CHECK ("end_datetime" > "start_datetime")
 );
 
 CREATE TABLE "oversees" (
@@ -78,20 +79,20 @@ CREATE TABLE "agreement" (
      PRIMARY KEY ("smuggler_id", "warden_id"),
      CONSTRAINT "agreement_smuggler_id_pk"
              FOREIGN KEY ("smuggler_id") REFERENCES "smuggler" ("id")
-             ON DELETE SET NULL,
+             ON DELETE CASCADE,
      CONSTRAINT "agreement_warden_id_pk"
              FOREIGN KEY ("warden_id") REFERENCES "warden" ("id")
              ON DELETE CASCADE
 );
 
-CREATE TABLE "employment" (
+CREATE TABLE "partnership" (
   "smuggler_id" INT NOT NULL,
   "jail_id" INT NOT NULL,
   PRIMARY KEY ("smuggler_id", "jail_id"),
-  CONSTRAINT "employment_smuggler_id_pk"
+  CONSTRAINT "partnership_smuggler_id_pk"
           FOREIGN KEY ("smuggler_id") REFERENCES "smuggler" ("id")
-          ON DELETE SET NULL,
-  CONSTRAINT "employment_jail_id_pk"
+          ON DELETE CASCADE,
+  CONSTRAINT "partnership_jail_id_pk"
           FOREIGN KEY ("jail_id") REFERENCES "jail" ("id")
           ON DELETE CASCADE
 );
@@ -105,22 +106,23 @@ CREATE TABLE "customer" (
     "cell_type" VARCHAR(16),
     CONSTRAINT "customer_jail_id_pk"
             FOREIGN KEY ("jail_id") REFERENCES "jail" ("id")
-            ON DELETE CASCADE
-);
-
-CREATE TABLE "item" (
-    "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
-    "name" VARCHAR(255) NOT NULL,
-    "description" VARCHAR2(2048),
-    "width" INT NOT NULL,
-    "length" INT NOT NULL,
-    "height" INT NOT NULL,
-    "price" NUMBER(*,2)
-
+            ON DELETE SET NULL
+            -- the customer might be transferred to a different one
 );
 
 CREATE TABLE "order"(
-    "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY
+    "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
+    "order_datetime" TIMESTAMP(0) NOT NULL,
+    "delivery_datetime" TIMESTAMP(0),
+    "delivery_method" VARCHAR(64),
+    "smuggler_id" INT NOT NULL,
+    "customer_id" INT NOT NULL,
+    CONSTRAINT "order_smuggler_id_pk"
+            FOREIGN KEY ("smuggler_id") REFERENCES "smuggler" ("id")
+            ON DELETE SET NULL,
+    CONSTRAINT "order_customer_id_pk"
+            FOREIGN KEY ("customer_id") REFERENCES "customer" ("id")
+            ON DELETE SET NULL
 );
 
 CREATE TABLE "pastry" (
@@ -139,12 +141,45 @@ CREATE TABLE "ingredient" (
     "purchase_price" NUMBER(*,2) NOT NULL
 );
 
+CREATE TABLE "pastry_ingredients" (
+    "pastry_id" INT NOT NULL,
+    "ingredient_id" INT NOT NULL,
+    PRIMARY KEY ("pastry_id","ingredient_id"),
+    CONSTRAINT "pastry_ingredients_ingredient_id_fk"
+            FOREIGN KEY ("ingredient_id") REFERENCES "ingredient" ("id")
+            ON DELETE CASCADE, -- TODO cascade? Are we sure?
+    CONSTRAINT "pastry_ingredients_pastry_id_fk"
+            FOREIGN KEY ("pastry_id") REFERENCES "pastry" ("id")
+            ON DELETE CASCADE
+);
+
 CREATE TABLE "allergen" (
     "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
     "description" VARCHAR2(2048)
 );
 
+CREATE TABLE "ingredient_allergen" (
+    "ingredient_id" INT NOT NULL,
+    "allergen_id" INT NOT NULL,
+    PRIMARY KEY ("allergen_id","ingredient_id"),
+    CONSTRAINT "ingredients_allergen_ingredient_id_fk"
+            FOREIGN KEY ("ingredient_id") REFERENCES "ingredient" ("id")
+            ON DELETE CASCADE,
+    CONSTRAINT "ingredients_allergen_pastry_id_fk"
+            FOREIGN KEY ("allergen_id") REFERENCES "allergen" ("id")
+            ON DELETE CASCADE
+);
+
+CREATE TABLE "item" (
+    "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
+    "name" VARCHAR(255) NOT NULL,
+    "description" VARCHAR2(2048),
+    "width" INT NOT NULL,
+    "length" INT NOT NULL,
+    "height" INT NOT NULL,
+    "price" NUMBER(*,2)
+);
 
 CREATE TABLE "order_content" (
     "order_id" INT NOT NULL,
@@ -160,30 +195,6 @@ CREATE TABLE "order_content" (
 	CONSTRAINT "order_content_item_id_fk"
 		FOREIGN KEY ("item_id") REFERENCES "item" ("id")
 		ON DELETE SET NULL
-);
-
-CREATE TABLE "pastry_ingredients" (
-        "pastry_id" INT NOT NULL,
-        "ingredient_id" INT NOT NULL,
-        PRIMARY KEY ("pastry_id","ingredient_id"),
-        CONSTRAINT "pastry_ingredients_ingredient_id_fk"
-		        FOREIGN KEY ("ingredient_id") REFERENCES "ingredient" ("id")
-		        ON DELETE CASCADE,
-		CONSTRAINT "pastry_ingredients_pastry_id_fk"
-                FOREIGN KEY ("pastry_id") REFERENCES "pastry" ("id")
-                ON DELETE CASCADE
-);
-
-CREATE TABLE "ingredient_allergen" (
-    "ingredient_id" INT NOT NULL,
-    "allergen_id" INT NOT NULL,
-    PRIMARY KEY ("allergen_id","ingredient_id"),
-    CONSTRAINT "ingredients_allergen_ingredient_id_fk"
-            FOREIGN KEY ("ingredient_id") REFERENCES "ingredient" ("id")
-            ON DELETE CASCADE,
-    CONSTRAINT "ingredients_allergen_pastry_id_fk"
-            FOREIGN KEY ("allergen_id") REFERENCES "allergen" ("id")
-            ON DELETE CASCADE
 );
 
 -- Insert some data
