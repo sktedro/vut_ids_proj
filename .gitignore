@@ -1,3 +1,5 @@
-erd_assignment.png
-erd_description.txt
 *.swp
+
+assignment/
+model/erd_description.txt
+src/.idea/
