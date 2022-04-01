@@ -189,7 +189,7 @@ CREATE TABLE "item" (
 CREATE TABLE "order_content" (
     "order_id" INT NOT NULL,
     "pastry_id" INT NOT NULL,
-    "item_id" INT DEFAULT NULL,
+    "item_id" INT NOT NULL,
     "amount" INT NOT NULL,
     PRIMARY KEY ("order_id", "pastry_id", "item_id"),
     CONSTRAINT "order_content_order_id_fk"
@@ -197,10 +197,11 @@ CREATE TABLE "order_content" (
 		ON DELETE CASCADE,
 	CONSTRAINT "order_content_pastry_id_fk"
 		FOREIGN KEY ("pastry_id") REFERENCES "pastry" ("id")
-		ON DELETE CASCADE,
-	CONSTRAINT "order_content_item_id_fk"
-		FOREIGN KEY ("item_id") REFERENCES "item" ("id")
+        ON DELETE CASCADE,
+    CONSTRAINT "order_content_item_id_fk"
+        FOREIGN KEY ("item_id") REFERENCES "item" ("id")
 		ON DELETE CASCADE
+
 );
 
 -- Insert some data
@@ -261,6 +262,9 @@ INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
         VALUES(2, 4); -- garlic_bread:garlic
 
 -- Insert some items that can be baked into a pastry
+-- First, insert "None" item to the "items" table
+INSERT INTO "item" ("name", "description", "width", "length", "height", "wholesale_price")
+        VALUES('none', '', 0, 0, 0, 0);
 INSERT INTO "item" ("name", "description", "width", "length", "height", "wholesale_price")
         VALUES('knife', 'kitchen knife', 18, 200, 24, 40);
 INSERT INTO "item" ("name", "description", "width", "length", "height", "wholesale_price")
@@ -372,25 +376,23 @@ INSERT INTO "order" ("order_datetime", "customer_id")
         VALUES (TIMESTAMP '2020-04-01 21:12:39', 3);
         -- Richard at Košice, delivery not yet planned
 
-/* TODO
 -- Add contents of an order to an order
 INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
-        VALUES(1, 1, 1, 1);
+        VALUES(1, 1, 2, 1);
 INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
-        VALUES(1, 2, 2, 1);
-INSERT INTO "order_content" ("order_id", "pastry_id", "amount")
-        VALUES(1, 2, 1);
+        VALUES(1, 2, 3, 1);
+INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
+        VALUES(1, 2, 1, 1);
         -- James at Leopoldov orders classic bread with knife inside and two
-        -- garlic breads, one with a wrench, one empty
-INSERT INTO "order_content" ("order_id", "pastry_id", "amount")
-        VALUES(2, 2, 2);
+        -- garlic breads, one with a wrench, one empty (item_id = 1, name = "none")
+INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
+        VALUES(2, 2, 1, 2);
         -- Susan at Košice orders two garlic breads, no items
 INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
-        VALUES(3, 1, 4, 1);
+        VALUES(3, 1, 5, 1);
 INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
-        VALUES(3, 2, 3, 1);
-INSERT INTO "order_content" ("order_id", "pastry_id", "amount")
-        VALUES(3, 2, 3);
+        VALUES(3, 2, 4, 1);
+INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
+        VALUES(3, 2, 1, 3);
         -- Richard at Košice orders classic bread with a screwdriver inside and
         -- four garlic breads, one with scalpel inside, three empty
-*/
