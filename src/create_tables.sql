@@ -1,7 +1,6 @@
 -- Authors: Dziyana Khrystsiuk (xkhrys00), Patrik Skaloš (xskalo01)
 
 -- TODO pastry dimensions??
--- TODO orders: pastries not containing items are not possible at the moment
 
 -- Clear old table data if there is any
 
