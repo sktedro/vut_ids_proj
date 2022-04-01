@@ -2,6 +2,76 @@
 
 -- TODO pastry dimensions??
 
+-- Validates IBAN code
+-- See http://www.morfoedro.it/doc.php?n=219&lang=en
+-- Copyright Alexandre Rodichevski 2003-2005
+--
+-- Language: PL/SQL
+-- Argument: B - IBAN string to be validated
+-- Returns: NULL=no argument, '0'=no error, '1'=invalid length,
+--   '2'=invalid symbol, '3'=invalid symbol in positions 1-2,
+--   '4'=invalid symbol in positions 3-4, '9'=check sum failed
+--
+create or replace function IBAN_CHK(
+	B varchar2 -- IBAN string to be validated
+) return varchar2 deterministic is -- error code
+	L pls_integer; -- string length
+	S varchar2(34); -- IBAN swapped
+	C pls_integer; -- code of current char
+	K pls_integer; -- code normalyzed to range 0..35
+	R pls_integer := 0; -- remainder of division by 97
+begin
+	-- Check length
+	L := length(B);
+	if B is NULL then
+		return NULL; -- no argument
+	elsif L not between 5 and 34 then
+		return '1'; -- invalid length
+	end if;
+
+	-- Swap the first four characters with the rest
+	S := substr(B, 5, L-4) || substr(B, 1, 4);
+
+	-- Loop by characters of the string
+	for I in 1 .. L loop
+
+		-- Extract ASCII code of the next char
+		C := ascii( substr(S, I, 1) );
+
+		-- Normalyze the code to the range 0-35
+		-- case: digit
+		if C between 48 and 57 then
+			if I between L-3 and L-2 then
+				return '3'; -- invalid symbol in positions 1-2
+			end if;
+			K := C - 48;
+		-- case: uppercase letter
+		elsif C between 65 and 90 then
+			if I between L-1 and L then
+				return '4'; -- invalid symbol in positions 3-4
+			end if;
+			K := C - 55;
+		-- case: other symbol
+		else
+			return '2'; -- invalid symbol
+		end if;
+
+		-- Cumulate the remainder of the division by 97
+		if K > 9 then
+			R := (100 * R + K) mod 97;
+		else
+			R := (10 * R + K) mod 97;
+		end if;
+
+	end loop;
+
+	-- The remainder of division should be 1
+	if R <> 1 then
+		return '9'; -- check sum failed
+	end if;
+	return '0'; -- no error
+end IBAN_CHK;
+
 -- Clear old table data if there is any
 
 DROP TABLE "order_content";
@@ -69,10 +139,11 @@ CREATE TABLE "smuggler" (
     "phone_number" VARCHAR(13) NOT NULL,
     "iban" VARCHAR2(34), -- We don't need his IBAN if he doesn't want to get paid
     "birth_number" NUMBER(10, 0) NOT NULL,
+    "iban_check_result" NUMBER GENERATED ALWAYS AS (IBAN_CHK("iban")) VIRTUAL,
     CONSTRAINT "phone_number_check"
             CHECK (REGEXP_LIKE("phone_number", '^(\+\d{12})$')),
-    CONSTRAINT "iban_length_check"
-            CHECK (REGEXP_LIKE("iban", '^[A-Z]{2}\d+$') AND LENGTH("iban") <= 34)
+    CONSTRAINT "iban_check"
+            CHECK("iban_check_result" = 0)
 );
 
 CREATE TABLE "agreement" (
@@ -291,7 +362,7 @@ INSERT INTO "warden" ("name", "surname", "prison_id")
 INSERT INTO "smuggler" ("name", "surname", "phone_number", "birth_number")
         VALUES ('Sam', 'Sneaky', '+421944333666', 9410166606);
 INSERT INTO "smuggler" ("name", "surname", "phone_number", "iban", "birth_number")
-        VALUES ('Jack', 'Quiet', '+420111222333', 'CZ3601000000000123456789', 9801041444);
+        VALUES ('Jack', 'Quiet', '+420111222333', 'CZ6250512664395318196669', 9801041444);
 INSERT INTO "smuggler" ("name", "surname", "phone_number", "birth_number")
         VALUES ('Mary', 'Persuasive', '+421944444555', 8803036606);
 
