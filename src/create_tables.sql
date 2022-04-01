@@ -72,6 +72,75 @@ begin
 	return '0'; -- no error
 end IBAN_CHK;
 
+-- Checks if an item fits in a pastry product
+CREATE OR REPLACE FUNCTION SIZE_CHK(
+        "item_id" INT,
+        "pastry_id" INT
+
+) RETURN INT DETERMINISTIC IS
+    -- Item dimensions
+    w INT;
+    h INT;
+    l INT;
+
+    -- Pastry dimensions
+    maxW INT;
+    maxH INT;
+    maxL INT;
+
+    -- An array of pastry dimensions used to permutate
+    TYPE array_t IS VARRAY(3) OF INT;
+    bounds array_t;
+
+    -- Temporary variable used for swapping values in 'bounds' array
+    tmp INT;
+
+BEGIN
+
+    -- We want to check the item size (w*h*l) with these 6 combinations
+    -- w   w   l   l   h   h
+    -- h   l   w   h   w   l
+    -- l   h   h   w   l   w
+
+    -- Get all dimensions (about the item and the pastry)
+    SELECT "item"."width"  INTO w FROM "item" WHERE "id" = "item_id";
+    SELECT "item"."height" INTO h FROM "item" WHERE "id" = "item_id";
+    SELECT "item"."length" INTO l FROM "item" WHERE "id" = "item_id";
+    SELECT "width"  INTO maxW FROM "pastry" WHERE "id" = "pastry_id";
+    SELECT "height" INTO maxH FROM "pastry" WHERE "id" = "pastry_id";
+    SELECT "length" INTO maxL FROM "pastry" WHERE "id" = "pastry_id";
+
+    -- Initialize the bounds array with pastry dimensions
+    bounds := array_t(maxW, maxH, maxL);
+
+    FOR i IN 1..3 LOOP
+
+        -- Check if it fits
+        IF w < bounds(1) AND h < bounds(2) AND l < bounds(3) THEN
+            RETURN 0;
+        END IF;
+
+        -- Swap 2 & 3
+        tmp := bounds(2);
+        bounds(2) := bounds(3);
+        bounds(3) := tmp;
+
+        -- Check if it fits
+        IF w < bounds(1) AND h < bounds(2) AND l < bounds(3) THEN
+            RETURN 0;
+        END IF;
+
+        -- Swap 1 & 2
+        tmp := bounds(1);
+        bounds(1) := bounds(2);
+        bounds(2) := tmp;
+    END LOOP;
+
+    -- No check succeeded - the object does not fit!
+    RETURN 1;
+
+END SIZE_CHK;
+
 -- Clear old table data if there is any
 
 DROP TABLE "order_content";
@@ -139,7 +208,7 @@ CREATE TABLE "smuggler" (
     "phone_number" VARCHAR(13) NOT NULL,
     "iban" VARCHAR2(34), -- We don't need his IBAN if he doesn't want to get paid
     "birth_number" NUMBER(10, 0) NOT NULL,
-    "iban_check_result" NUMBER GENERATED ALWAYS AS (IBAN_CHK("iban")) VIRTUAL,
+    "iban_check_result" INT GENERATED ALWAYS AS (IBAN_CHK("iban")) VIRTUAL,
     CONSTRAINT "phone_number_check"
             CHECK (REGEXP_LIKE("phone_number", '^(\+\d{12})$')),
     CONSTRAINT "iban_check"
@@ -204,6 +273,9 @@ CREATE TABLE "pastry" (
     "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
     "type" VARCHAR(64) NOT NULL,
+    "width" INT NOT NULL,
+    "height" INT NOT NULL,
+    "length" INT NOT NULL,
     "weight" INT NOT NULL
 );
 
@@ -251,8 +323,8 @@ CREATE TABLE "item" (
     "name" VARCHAR(255) NOT NULL,
     "description" VARCHAR2(2048),
     "width" INT NOT NULL,
-    "length" INT NOT NULL,
     "height" INT NOT NULL,
+    "length" INT NOT NULL,
     "wholesale_price" NUMBER(*, 2)
 );
 
@@ -260,6 +332,7 @@ CREATE TABLE "order_content" (
     "order_id" INT NOT NULL,
     "pastry_id" INT NOT NULL,
     "item_id" INT NOT NULL,
+    "size_check_result" INT GENERATED ALWAYS AS (SIZE_CHK("item_id", "pastry_id")) VIRTUAL,
     "amount" INT NOT NULL,
     PRIMARY KEY ("order_id", "pastry_id", "item_id"),
     CONSTRAINT "order_content_order_id_fk"
@@ -270,8 +343,9 @@ CREATE TABLE "order_content" (
         ON DELETE CASCADE,
     CONSTRAINT "order_content_item_id_fk"
         FOREIGN KEY ("item_id") REFERENCES "item" ("id")
-		ON DELETE CASCADE
-
+		ON DELETE CASCADE,
+    CONSTRAINT "size_check"
+        CHECK("size_check_result" = 0)
 );
 
 -- Insert some data
@@ -310,10 +384,10 @@ INSERT INTO "ingredient_allergen" ("ingredient_id", "allergen_id")
         VALUES(3, 7); -- yeast:soy
 
 -- Insert some pastries
-INSERT INTO "pastry" ("name", "type", "weight")
-        VALUES ('classic bread', 'bread', '1000');
-INSERT INTO "pastry" ("name", "type", "weight")
-        VALUES ('garlic bread', 'bread', '500');
+INSERT INTO "pastry" ("name", "type", "width", "height", "length", "weight")
+        VALUES ('classic bread', 'bread', 200, 150, 400, '1000');
+INSERT INTO "pastry" ("name", "type", "width", "height", "length", "weight")
+        VALUES ('garlic bread', 'bread', 120, 100, 250, '500');
 
 -- Connect pastries to ingredients
 INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
@@ -342,7 +416,7 @@ INSERT INTO "item" ("name", "description", "width", "length", "height", "wholesa
 INSERT INTO "item" ("name", "description", "width", "length", "height", "wholesale_price")
         VALUES('scalpel', 'carbonated steel with anti-slip handle', 10, 100, 10, 18);
 INSERT INTO "item" ("name", "description", "width", "length", "height", "wholesale_price")
-        VALUES('screwdriver', 'phillips screwdriver #4', 28, 155, 28, 42);
+        VALUES('screwdriver', 'phillips screwdriver #4', 34, 274, 34, 42);
 
 -- Initialize two prisons
 INSERT INTO "prison" ("region", "city", "zip", "street", "street_number")
