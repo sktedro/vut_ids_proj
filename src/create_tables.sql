@@ -1,8 +1,7 @@
 -- Authors: Dziyana Khrystsiuk (xkhrys00), Patrik Skaloš (xskalo01)
 
--- TODO:
--- What to do with attributes which cannot be null (NOT NULL) but we want to
--- keep their parent table when references get deleted (ON DELETE SET NULL)?
+-- TODO pastry dimensions??
+-- TODO orders: pastries not containing items are not possible at the moment
 
 -- Clear old table data if there is any
 
@@ -279,28 +278,119 @@ INSERT INTO "prison" ("city", "zip", "street", "street_number")
 
 -- Initialize some wardens
 INSERT INTO "warden" ("name", "surname", "prison_id")
-        VALUES ('John', 'Eyeless', 1);
+        VALUES ('John', 'Eyeless', 1); -- John at Leopoldov
 INSERT INTO "warden" ("name", "surname", "prison_id")
-        VALUES ('Bob', 'Guard', 1);
+        VALUES ('Bob', 'Guard', 1); -- Bob at Leopoldov
 INSERT INTO "warden" ("name", "surname", "prison_id")
-        VALUES ('Natalie', 'Harsh', 2);
+        VALUES ('Natalie', 'Harsh', 2); -- Natalie at Košice
 
 -- Initialize some smugglers
 INSERT INTO "smuggler" ("name", "surname", "phone_number", "birth_number")
-        VALUES ('Sam', 'Sneaky', '+421944333666', 0010166606);
+        VALUES ('Sam', 'Sneaky', '+421944333666', 9410166606);
 INSERT INTO "smuggler" ("name", "surname", "phone_number", "iban", "birth_number")
-        VALUES ('Robin', 'Hood', '+420111222333', 'CZ3601000000000123456789', 0001041444);
+        VALUES ('Jack', 'Quiet', '+420111222333', 'CZ3601000000000123456789', 9801041444);
+INSERT INTO "smuggler" ("name", "surname", "phone_number", "birth_number")
+        VALUES ('Mary', 'Persuasive', '+421944444555', 8803036606);
 
 -- Connect smugglers to prisons (partnership)
+INSERT INTO "partnership" ("smuggler_id", "prison_id")
+        VALUES (1, 1); -- Sam Sneaky at Leopoldov
+INSERT INTO "partnership" ("smuggler_id", "prison_id")
+        VALUES (1, 2); -- Sam Sneaky at Košice
+INSERT INTO "partnership" ("smuggler_id", "prison_id")
+        VALUES (2, 1); -- Jack Quiet at Leopoldov
+INSERT INTO "partnership" ("smuggler_id", "prison_id")
+        VALUES (3, 2); -- Mary Persuasive at Košice
 
 -- Connect smugglers to wardens (agreement)
+INSERT INTO "agreement" ("smuggler_id", "warden_id")
+        VALUES (1, 1); -- Sam with John
+INSERT INTO "agreement" ("smuggler_id", "warden_id")
+        VALUES (1, 3); -- Sam with Natalie
+INSERT INTO "agreement" ("smuggler_id", "warden_id")
+        VALUES (2, 2); -- Jack with Bob
+INSERT INTO "agreement" ("smuggler_id", "warden_id")
+        VALUES (3, 3); -- Mary with Natalie
 
 -- Create some shifts
+-- Leopoldov: 8h blocks starting at 6AM
+INSERT INTO "shift" ("start_datetime", "end_datetime")
+        VALUES(TIMESTAMP '2020-04-01 06:00:00', TIMESTAMP '2020-04-01 14:00:00');
+INSERT INTO "shift" ("start_datetime", "end_datetime")
+        VALUES(TIMESTAMP '2020-04-01 22:00:00', TIMESTAMP '2020-04-02 06:00:00');
+INSERT INTO "shift" ("start_datetime", "end_datetime")
+        VALUES(TIMESTAMP '2020-04-02 06:00:00', TIMESTAMP '2020-04-02 14:00:00');
+INSERT INTO "shift" ("start_datetime", "end_datetime")
+        VALUES(TIMESTAMP '2020-04-02 22:00:00', TIMESTAMP '2020-04-03 06:00:00');
+-- Košice: 8h blocks starting at 4AM
+INSERT INTO "shift" ("start_datetime", "end_datetime")
+        VALUES(TIMESTAMP '2020-04-01 12:00:00', TIMESTAMP '2020-04-01 20:00:00');
+INSERT INTO "shift" ("start_datetime", "end_datetime")
+        VALUES(TIMESTAMP '2020-04-03 12:00:00', TIMESTAMP '2020-04-03 20:00:00');
 
 -- Connect wardens to shifts
+-- John: every day at 6AM
+INSERT INTO "oversees" ("warden_id", "shift_id")
+        VALUES(1, 1);
+INSERT INTO "oversees" ("warden_id", "shift_id")
+        VALUES(1, 3);
+-- Bob: every day at 10PM
+INSERT INTO "oversees" ("warden_id", "shift_id")
+        VALUES(2, 2);
+INSERT INTO "oversees" ("warden_id", "shift_id")
+        VALUES(2, 4);
+-- Natalie: every other day at 12PM (noon)
+INSERT INTO "oversees" ("warden_id", "shift_id")
+        VALUES(3, 5);
+INSERT INTO "oversees" ("warden_id", "shift_id")
+        VALUES(3, 6);
 
 -- Initialize some customers
+INSERT INTO "customer" ("name", "surname", "prison_id", "cell_number", "cell_type")
+        VALUES('James', 'Junkie', 1, 42, 'general'); -- James at Leopoldov #42
+INSERT INTO "customer" ("name", "surname", "prison_id", "cell_number", "cell_type")
+        VALUES('Michael', 'Robber', 1, 169, 'general'); -- Michael at Leopoldov #169
+INSERT INTO "customer" ("name", "surname", "prison_id", "cell_number", "cell_type")
+        VALUES('Richard', 'Kidnapper', 1, 4, 'solitary'); -- Richard at Leopoldov #4
+INSERT INTO "customer" ("name", "surname", "prison_id", "cell_number", "cell_type")
+        VALUES('Elizabeth', 'Kill', 2, 1173, 'general'); -- Elizabeth at Košice #1173
+INSERT INTO "customer" ("name", "surname", "prison_id", "cell_number", "cell_type")
+        VALUES('Susan', 'Innocent', 2, 17, 'protective'); --  Susan at Košice #17
 
 -- Create some orders
+INSERT INTO "order" ("order_datetime", "delivery_datetime", "delivery_method",
+                "smuggler_id", "customer_id")
+        VALUES (TIMESTAMP '2020-04-01 17:34:02', TIMESTAMP '2020-04-02 08:24:00',
+                'delivery by warden', 1, 1);
+        -- James at Leopoldov, delivered by smuggler Sam and warden John
+INSERT INTO "order" ("order_datetime", "delivery_datetime", "delivery_method",
+                 "smuggler_id", "customer_id")
+        VALUES (TIMESTAMP '2020-04-01 21:12:39', TIMESTAMP '2020-04-03 15:15:00',
+                'delivery by warden', 3, 5);
+        -- Susan at Košice, delivered by smuggler Sam and warden Natalie
+INSERT INTO "order" ("order_datetime", "customer_id")
+        VALUES (TIMESTAMP '2020-04-01 21:12:39', 3);
+        -- Richard at Košice, delivery not yet planned
 
+/* TODO
 -- Add contents of an order to an order
+INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
+        VALUES(1, 1, 1, 1);
+INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
+        VALUES(1, 2, 2, 1);
+INSERT INTO "order_content" ("order_id", "pastry_id", "amount")
+        VALUES(1, 2, 1);
+        -- James at Leopoldov orders classic bread with knife inside and two
+        -- garlic breads, one with a wrench, one empty
+INSERT INTO "order_content" ("order_id", "pastry_id", "amount")
+        VALUES(2, 2, 2);
+        -- Susan at Košice orders two garlic breads, no items
+INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
+        VALUES(3, 1, 4, 1);
+INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
+        VALUES(3, 2, 3, 1);
+INSERT INTO "order_content" ("order_id", "pastry_id", "amount")
+        VALUES(3, 2, 3);
+        -- Richard at Košice orders classic bread with a screwdriver inside and
+        -- four garlic breads, one with scalpel inside, three empty
+*/
