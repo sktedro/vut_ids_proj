@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>DATABASE</ID>
+  <OriginalElement>cac31f7d-35c7-428e-8df9-8138d41e49b0.SCHEMA:XSKALO01</OriginalElement>
+  <nodes>
+    <node x="298.9117647058822" y="715.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.order_content</node>
+    <node x="485.625" y="231.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.jail</node>
+    <node x="1377.0" y="522.5">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.agreement</node>
+    <node x="989.4117647058822" y="231.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.smuggler</node>
+    <node x="522.0" y="498.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.pastry</node>
+    <node x="709.0" y="522.5">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.employment</node>
+    <node x="1164.0" y="522.5">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.partnership</node>
+    <node x="1265.5" y="0.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.prison</node>
+    <node x="1556.1617647058822" y="255.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.warden</node>
+    <node x="242.0" y="474.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.order</node>
+    <node x="1815.4117647058822" y="267.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.shift</node>
+    <node x="1827.0" y="522.5">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.oversees</node>
+    <node x="1590.0" y="510.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.allergen</node>
+    <node x="157.5" y="231.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.customer</node>
+    <node x="1276.6617647058822" y="739.5">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.ingredient_allergen</node>
+    <node x="922.0" y="486.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.ingredient</node>
+    <node x="0.0" y="462.0">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.item</node>
+    <node x="731.1617647058822" y="739.5">cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.pastry_ingredients</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.customer" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.prison" relationship="REFERENCES">
+      <point x="0.0" y="-89.5" />
+      <point x="255.0" y="205.0" />
+      <point x="1372.0" y="205.0" />
+      <point x="0.0" y="89.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.order_content" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.order" relationship="REFERENCES">
+      <point x="0.0" y="-65.5" />
+      <point x="384.4117647058822" y="690.0" />
+      <point x="372.0" y="690.0" />
+      <point x="0.0" y="89.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.partnership" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.smuggler" relationship="REFERENCES">
+      <point x="-48.25" y="-41.0" />
+      <point x="1212.25" y="441.0" />
+      <point x="1103.4117647058822" y="441.0" />
+      <point x="0.0" y="89.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.order" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.customer" relationship="REFERENCES">
+      <point x="-65.0" y="-89.5" />
+      <point x="307.0" y="441.0" />
+      <point x="255.0" y="441.0" />
+      <point x="0.0" y="89.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.order_content" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.pastry" relationship="REFERENCES">
+      <point x="57.0" y="-65.5" />
+      <point x="441.4117647058822" y="690.0" />
+      <point x="605.5" y="690.0" />
+      <point x="0.0" y="65.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.pastry_ingredients" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.pastry" relationship="REFERENCES">
+      <point x="-50.25" y="-41.0" />
+      <point x="781.4117647058822" y="690.0" />
+      <point x="605.5" y="690.0" />
+      <point x="0.0" y="65.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.employment" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.smuggler" relationship="REFERENCES">
+      <point x="48.25" y="-41.0" />
+      <point x="853.75" y="441.0" />
+      <point x="1103.4117647058822" y="441.0" />
+      <point x="0.0" y="89.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.partnership" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.prison" relationship="REFERENCES">
+      <point x="48.25" y="-41.0" />
+      <point x="1308.75" y="431.0" />
+      <point x="1372.0" y="431.0" />
+      <point x="0.0" y="89.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.agreement" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.smuggler" relationship="REFERENCES">
+      <point x="-48.25" y="-41.0" />
+      <point x="1425.25" y="441.0" />
+      <point x="1103.4117647058822" y="441.0" />
+      <point x="0.0" y="89.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.order_content" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.item" relationship="REFERENCES">
+      <point x="-57.0" y="-65.5" />
+      <point x="327.4117647058822" y="690.0" />
+      <point x="111.0" y="690.0" />
+      <point x="0.0" y="101.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.oversees" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.warden" relationship="REFERENCES">
+      <point x="-44.75" y="-41.0" />
+      <point x="1871.75" y="441.0" />
+      <point x="1646.6617647058822" y="441.0" />
+      <point x="0.0" y="65.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.agreement" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.warden" relationship="REFERENCES">
+      <point x="48.25" y="-41.0" />
+      <point x="1521.75" y="441.0" />
+      <point x="1646.6617647058822" y="441.0" />
+      <point x="0.0" y="65.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.employment" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.jail" relationship="REFERENCES">
+      <point x="-48.25" y="-41.0" />
+      <point x="757.25" y="431.0" />
+      <point x="592.125" y="431.0" />
+      <point x="0.0" y="89.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.oversees" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.shift" relationship="REFERENCES">
+      <point x="44.75" y="-41.0" />
+      <point x="1961.25" y="441.0" />
+      <point x="1933.9117647058822" y="441.0" />
+      <point x="0.0" y="53.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.order" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.smuggler" relationship="REFERENCES">
+      <point x="65.0" y="-89.5" />
+      <point x="437.0" y="441.0" />
+      <point x="1103.4117647058822" y="441.0" />
+      <point x="0.0" y="89.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.pastry_ingredients" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.ingredient" relationship="REFERENCES">
+      <point x="50.25" y="-41.0" />
+      <point x="881.9117647058822" y="690.0" />
+      <point x="1033.0" y="690.0" />
+      <point x="0.0" y="77.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.warden" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.prison" relationship="REFERENCES">
+      <point x="0.0" y="-65.5" />
+      <point x="1646.6617647058822" y="205.0" />
+      <point x="1372.0" y="205.0" />
+      <point x="0.0" y="89.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.ingredient_allergen" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.allergen" relationship="REFERENCES">
+      <point x="50.75" y="-41.0" />
+      <point x="1428.9117647058822" y="690.0" />
+      <point x="1698.5" y="690.0" />
+      <point x="0.0" y="53.5" />
+    </edge>
+    <edge source="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.ingredient_allergen" target="cac31f7d-35c7-428e-8df9-8138d41e49b0.TABLE:XSKALO01.ingredient" relationship="REFERENCES">
+      <point x="-50.75" y="-41.0" />
+      <point x="1327.4117647058822" y="690.0" />
+      <point x="1033.0" y="690.0" />
+      <point x="0.0" y="77.5" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic" zoom="0.4090689821514713" showDependencies="false" x="1026.5" y="423.0" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Columns</Category>
+    <Category>Comments</Category>
+    <Category>Key columns</Category>
+    <Category>Virtual foreign keys</Category>
+  </Categories>
+</Diagram>
+
