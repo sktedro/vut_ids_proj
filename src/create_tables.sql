@@ -1,6 +1,8 @@
 -- Authors: Dziyana Khrystsiuk (xkhrys00), Patrik Skaloš (xskalo01)
 
--- TODO pastry dimensions??
+--------------------------------------------------------------------------------
+-- User-defined functions
+--------------------------------------------------------------------------------
 
 -- Validates IBAN code
 -- See http://www.morfoedro.it/doc.php?n=219&lang=en
@@ -141,7 +143,9 @@ BEGIN
 
 END SIZE_CHK;
 
+--------------------------------------------------------------------------------
 -- Clear old table data if there is any
+--------------------------------------------------------------------------------
 
 DROP TABLE "order_content";
 DROP TABLE "item";
@@ -160,7 +164,9 @@ DROP TABLE "shift";
 DROP TABLE "warden";
 DROP TABLE "prison" CASCADE CONSTRAINTS;
 
+--------------------------------------------------------------------------------
 -- Create new tables
+--------------------------------------------------------------------------------
 
 CREATE TABLE "prison" (
     "id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
@@ -332,7 +338,8 @@ CREATE TABLE "order_content" (
     "order_id" INT NOT NULL,
     "pastry_id" INT NOT NULL,
     "item_id" INT NOT NULL,
-    "size_check_result" INT GENERATED ALWAYS AS (SIZE_CHK("item_id", "pastry_id")) VIRTUAL,
+    "size_check_result" INT GENERATED ALWAYS AS
+            (SIZE_CHK("item_id", "pastry_id")) VIRTUAL,
     "amount" INT NOT NULL,
     PRIMARY KEY ("order_id", "pastry_id", "item_id"),
     CONSTRAINT "order_content_order_id_fk"
@@ -348,7 +355,9 @@ CREATE TABLE "order_content" (
         CHECK("size_check_result" = 0)
 );
 
+--------------------------------------------------------------------------------
 -- Insert some data
+--------------------------------------------------------------------------------
 
 -- Insert some ingredients
 INSERT INTO "ingredient" ("name", "current_amount", "unit", "wholesale_price")
