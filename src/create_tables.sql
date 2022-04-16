@@ -76,8 +76,8 @@ end IBAN_CHK;
 
 -- Checks if an item fits in a pastry product
 CREATE OR REPLACE FUNCTION SIZE_CHK(
-        "item_id" INT,
-        "pastry_id" INT
+        "requested_item_id" INT,
+        "requested_pastry_id" INT
 
 ) RETURN INT DETERMINISTIC IS
     -- Item dimensions
@@ -105,12 +105,12 @@ BEGIN
     -- l   h   h   w   l   w
 
     -- Get all dimensions (about the item and the pastry)
-    SELECT "item"."width"  INTO w FROM "item" WHERE "id" = "item_id";
-    SELECT "item"."height" INTO h FROM "item" WHERE "id" = "item_id";
-    SELECT "item"."length" INTO l FROM "item" WHERE "id" = "item_id";
-    SELECT "width"  INTO maxW FROM "pastry" WHERE "id" = "pastry_id";
-    SELECT "height" INTO maxH FROM "pastry" WHERE "id" = "pastry_id";
-    SELECT "length" INTO maxL FROM "pastry" WHERE "id" = "pastry_id";
+    SELECT "item"."width"  INTO w FROM "item" WHERE "item_id" = "requested_item_id";
+    SELECT "item"."height" INTO h FROM "item" WHERE "item_id" = "requested_item_id";
+    SELECT "item"."length" INTO l FROM "item" WHERE "item_id" = "requested_item_id";
+    SELECT "pastry"."width"  INTO maxW FROM "pastry" WHERE "pastry_id" = "requested_pastry_id";
+    SELECT "pastry"."height" INTO maxH FROM "pastry" WHERE "pastry_id" = "requested_pastry_id";
+    SELECT "pastry"."length" INTO maxL FROM "pastry" WHERE "pastry_id" = "requested_pastry_id";
 
     -- Initialize the bounds array with pastry dimensions
     bounds := array_t(maxW, maxH, maxL);
@@ -169,7 +169,7 @@ DROP TABLE "prison" CASCADE CONSTRAINTS;
 --------------------------------------------------------------------------------
 
 CREATE TABLE "prison" (
-    "id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    "prison_id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     "region" VARCHAR(64),
     "city" VARCHAR(64) NOT NULL,
     "zip" NUMBER(5, 0) NOT NULL,
@@ -178,17 +178,17 @@ CREATE TABLE "prison" (
 );
 
 CREATE TABLE "warden" (
-    "id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    "warden_id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     "name" VARCHAR(64) NOT NULL,
     "surname" VARCHAR(64) NOT NULL,
     "prison_id" INT NOT NULL,
     CONSTRAINT "warden_prison_id_pk"
-            FOREIGN KEY ("prison_id") REFERENCES "prison" ("id")
+            FOREIGN KEY ("prison_id") REFERENCES "prison" ("prison_id")
             ON DELETE CASCADE
 );
 
 CREATE TABLE "shift" (
-    "id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    "shift_id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     "start_datetime" TIMESTAMP(0) NOT NULL,
     "end_datetime" TIMESTAMP(0) NOT NULL,
     CONSTRAINT "check_shift_datetime"
@@ -200,15 +200,15 @@ CREATE TABLE "oversees" (
     "shift_id" INT NOT NULL,
     PRIMARY KEY ("warden_id", "shift_id"),
     CONSTRAINT "oversees_warden_id_pk"
-            FOREIGN KEY ("warden_id") REFERENCES "warden" ("id")
+            FOREIGN KEY ("warden_id") REFERENCES "warden" ("warden_id")
             ON DELETE CASCADE,
     CONSTRAINT "oversees_shift_id_pk"
-            FOREIGN KEY ("shift_id") REFERENCES "shift" ("id")
+            FOREIGN KEY ("shift_id") REFERENCES "shift" ("shift_id")
             ON DELETE CASCADE
 );
 
 CREATE TABLE "smuggler" (
-    "id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    "smuggler_id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     "name" VARCHAR(64) NOT NULL,
     "surname" VARCHAR(64) NOT NULL,
     "phone_number" VARCHAR(13) NOT NULL,
@@ -226,10 +226,10 @@ CREATE TABLE "agreement" (
      "warden_id" INT NOT NULL,
      PRIMARY KEY ("smuggler_id", "warden_id"),
      CONSTRAINT "agreement_smuggler_id_pk"
-             FOREIGN KEY ("smuggler_id") REFERENCES "smuggler" ("id")
+             FOREIGN KEY ("smuggler_id") REFERENCES "smuggler" ("smuggler_id")
              ON DELETE CASCADE,
      CONSTRAINT "agreement_warden_id_pk"
-             FOREIGN KEY ("warden_id") REFERENCES "warden" ("id")
+             FOREIGN KEY ("warden_id") REFERENCES "warden" ("warden_id")
              ON DELETE CASCADE
 );
 
@@ -238,28 +238,28 @@ CREATE TABLE "partnership" (
   "prison_id" INT NOT NULL,
   PRIMARY KEY ("smuggler_id", "prison_id"),
   CONSTRAINT "partnership_smuggler_id_pk"
-          FOREIGN KEY ("smuggler_id") REFERENCES "smuggler" ("id")
+          FOREIGN KEY ("smuggler_id") REFERENCES "smuggler" ("smuggler_id")
           ON DELETE CASCADE,
   CONSTRAINT "partnership_prison_id_pk"
-          FOREIGN KEY ("prison_id") REFERENCES "prison" ("id")
+          FOREIGN KEY ("prison_id") REFERENCES "prison" ("prison_id")
           ON DELETE CASCADE
 );
 
 CREATE TABLE "customer" (
-    "id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
+    "customer_id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
     "name" VARCHAR(64) NOT NULL,
     "surname" VARCHAR(64) NOT NULL,
     "prison_id" INT,
     "cell_number" INT,
     "cell_type" VARCHAR(16),
     CONSTRAINT "customer_prison_id_pk"
-            FOREIGN KEY ("prison_id") REFERENCES "prison" ("id")
+            FOREIGN KEY ("prison_id") REFERENCES "prison" ("prison_id")
             ON DELETE SET NULL
             -- the customer might be transferred to a different one
 );
 
 CREATE TABLE "order" (
-    "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
+    "order_id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
     "order_datetime" TIMESTAMP(0) NOT NULL,
     "delivery_datetime" TIMESTAMP(0),
     "delivery_method" VARCHAR(64),
@@ -268,30 +268,31 @@ CREATE TABLE "order" (
     CONSTRAINT "check_order_datetime"
             CHECK ("order_datetime" < "delivery_datetime"),
     CONSTRAINT "order_smuggler_id_pk"
-            FOREIGN KEY ("smuggler_id") REFERENCES "smuggler" ("id")
+            FOREIGN KEY ("smuggler_id") REFERENCES "smuggler" ("smuggler_id")
             ON DELETE SET NULL,
     CONSTRAINT "order_customer_id_pk"
-            FOREIGN KEY ("customer_id") REFERENCES "customer" ("id")
+            FOREIGN KEY ("customer_id") REFERENCES "customer" ("customer_id")
             ON DELETE CASCADE
 );
 
 CREATE TABLE "pastry" (
-    "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
+    "pastry_id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
     "type" VARCHAR(64) NOT NULL,
     "width" INT NOT NULL,
     "height" INT NOT NULL,
     "length" INT NOT NULL,
-    "weight" INT NOT NULL
+    "weight" INT NOT NULL,
+    "selling_price" NUMBER(*, 2)
 );
 
 CREATE TABLE "ingredient" (
-    "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
+    "ingredient_id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
     "current_amount" INT NOT NULL,
     "unit" VARCHAR(4) NOT NULL
             CHECK("unit" IN ('pcs', 'g', 'kg', 'ml', 'l', 'mm', 'm', 'mm^2', 'm^2')),
-    "wholesale_price" NUMBER(*, 4) NOT NULL
+    "buying_price" NUMBER(*, 4) NOT NULL
 );
 
 CREATE TABLE "pastry_ingredients" (
@@ -299,15 +300,15 @@ CREATE TABLE "pastry_ingredients" (
     "ingredient_id" INT NOT NULL,
     PRIMARY KEY ("pastry_id","ingredient_id"),
     CONSTRAINT "pastry_ingredients_ingredient_id_fk"
-            FOREIGN KEY ("ingredient_id") REFERENCES "ingredient" ("id")
+            FOREIGN KEY ("ingredient_id") REFERENCES "ingredient" ("ingredient_id")
             ON DELETE CASCADE,
     CONSTRAINT "pastry_ingredients_pastry_id_fk"
-            FOREIGN KEY ("pastry_id") REFERENCES "pastry" ("id")
+            FOREIGN KEY ("pastry_id") REFERENCES "pastry" ("pastry_id")
             ON DELETE CASCADE
 );
 
 CREATE TABLE "allergen" (
-    "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
+    "allergen_id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
     "description" VARCHAR2(2048)
 );
@@ -317,21 +318,22 @@ CREATE TABLE "ingredient_allergen" (
     "allergen_id" INT NOT NULL,
     PRIMARY KEY ("allergen_id","ingredient_id"),
     CONSTRAINT "ingredients_allergen_ingredient_id_fk"
-            FOREIGN KEY ("ingredient_id") REFERENCES "ingredient" ("id")
+            FOREIGN KEY ("ingredient_id") REFERENCES "ingredient" ("ingredient_id")
             ON DELETE CASCADE,
     CONSTRAINT "ingredients_allergen_pastry_id_fk"
-            FOREIGN KEY ("allergen_id") REFERENCES "allergen" ("id")
+            FOREIGN KEY ("allergen_id") REFERENCES "allergen" ("allergen_id")
             ON DELETE CASCADE
 );
 
 CREATE TABLE "item" (
-    "id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
+    "item_id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
     "description" VARCHAR2(2048),
     "width" INT NOT NULL,
     "height" INT NOT NULL,
     "length" INT NOT NULL,
-    "wholesale_price" NUMBER(*, 2)
+    "buying_price" NUMBER(*, 2),
+    "selling_price" NUMBER(*, 2)
 );
 
 CREATE TABLE "order_content" (
@@ -343,13 +345,13 @@ CREATE TABLE "order_content" (
     "amount" INT NOT NULL,
     PRIMARY KEY ("order_id", "pastry_id", "item_id"),
     CONSTRAINT "order_content_order_id_fk"
-		FOREIGN KEY ("order_id") REFERENCES "order" ("id")
+		FOREIGN KEY ("order_id") REFERENCES "order" ("order_id")
 		ON DELETE CASCADE,
 	CONSTRAINT "order_content_pastry_id_fk"
-		FOREIGN KEY ("pastry_id") REFERENCES "pastry" ("id")
+		FOREIGN KEY ("pastry_id") REFERENCES "pastry" ("pastry_id")
         ON DELETE CASCADE,
     CONSTRAINT "order_content_item_id_fk"
-        FOREIGN KEY ("item_id") REFERENCES "item" ("id")
+        FOREIGN KEY ("item_id") REFERENCES "item" ("item_id")
 		ON DELETE CASCADE,
     CONSTRAINT "size_check"
         CHECK("size_check_result" = 0)
@@ -360,13 +362,13 @@ CREATE TABLE "order_content" (
 --------------------------------------------------------------------------------
 
 -- Insert some ingredients
-INSERT INTO "ingredient" ("name", "current_amount", "unit", "wholesale_price")
+INSERT INTO "ingredient" ("name", "current_amount", "unit", "buying_price")
         VALUES ('flour', '10', 'kg', '0.3');
-INSERT INTO "ingredient" ("name", "current_amount", "unit", "wholesale_price")
+INSERT INTO "ingredient" ("name", "current_amount", "unit", "buying_price")
         VALUES ('egg', '83', 'pcs', '0.05');
-INSERT INTO "ingredient" ("name", "current_amount", "unit", "wholesale_price")
+INSERT INTO "ingredient" ("name", "current_amount", "unit", "buying_price")
         VALUES ('yeast', '1283', 'g', '0.016');
-INSERT INTO "ingredient" ("name", "current_amount", "unit", "wholesale_price")
+INSERT INTO "ingredient" ("name", "current_amount", "unit", "buying_price")
         VALUES ('garlic', '300', 'g', '0.023');
 
 -- Insert allergens
@@ -393,10 +395,10 @@ INSERT INTO "ingredient_allergen" ("ingredient_id", "allergen_id")
         VALUES(3, 7); -- yeast:soy
 
 -- Insert some pastries
-INSERT INTO "pastry" ("name", "type", "width", "height", "length", "weight")
-        VALUES ('classic bread', 'bread', 200, 150, 400, '1000');
-INSERT INTO "pastry" ("name", "type", "width", "height", "length", "weight")
-        VALUES ('garlic bread', 'bread', 120, 100, 250, '500');
+INSERT INTO "pastry" ("name", "type", "width", "height", "length", "weight", "selling_price")
+        VALUES ('classic bread', 'bread', 200, 150, 400, '1000', 60);
+INSERT INTO "pastry" ("name", "type", "width", "height", "length", "weight", "selling_price")
+        VALUES ('garlic bread', 'bread', 120, 100, 250, '500', 45);
 
 -- Connect pastries to ingredients
 INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
@@ -416,16 +418,16 @@ INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
 
 -- Insert some items that can be baked into a pastry
 -- First, insert "None" item to the "items" table
-INSERT INTO "item" ("name", "description", "width", "length", "height", "wholesale_price")
-        VALUES('none', '', 0, 0, 0, 0);
-INSERT INTO "item" ("name", "description", "width", "length", "height", "wholesale_price")
-        VALUES('knife', 'kitchen knife', 18, 200, 24, 40);
-INSERT INTO "item" ("name", "description", "width", "length", "height", "wholesale_price")
-        VALUES('wrench', 'M8 stainless steel metric wrench', 8, 122, 40, 24);
-INSERT INTO "item" ("name", "description", "width", "length", "height", "wholesale_price")
-        VALUES('scalpel', 'carbonated steel with anti-slip handle', 10, 100, 10, 18);
-INSERT INTO "item" ("name", "description", "width", "length", "height", "wholesale_price")
-        VALUES('screwdriver', 'phillips screwdriver #4', 34, 274, 34, 42);
+INSERT INTO "item" ("name", "description", "width", "length", "height", "buying_price", "selling_price")
+        VALUES('none', '', 0, 0, 0, 0, 0);
+INSERT INTO "item" ("name", "description", "width", "length", "height", "buying_price", "selling_price")
+        VALUES('knife', 'kitchen knife', 18, 200, 24, 380, 600);
+INSERT INTO "item" ("name", "description", "width", "length", "height", "buying_price", "selling_price")
+        VALUES('wrench', 'M8 stainless steel metric wrench', 8, 122, 40, 400, 549);
+INSERT INTO "item" ("name", "description", "width", "length", "height", "buying_price", "selling_price")
+        VALUES('scalpel', 'carbonated steel with anti-slip handle', 10, 100, 10, 180, 299);
+INSERT INTO "item" ("name", "description", "width", "length", "height", "buying_price", "selling_price")
+        VALUES('screwdriver', 'phillips screwdriver #4', 34, 274, 34, 1400, 1499);
 
 -- Initialize two prisons
 INSERT INTO "prison" ("region", "city", "zip", "street", "street_number")
