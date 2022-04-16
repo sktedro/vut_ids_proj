@@ -179,7 +179,7 @@ CREATE TABLE "prison" (
 
 CREATE TABLE "warden" (
     "warden_id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    "name" VARCHAR(64) NOT NULL,
+    "warden_name" VARCHAR(64) NOT NULL,
     "surname" VARCHAR(64) NOT NULL,
     "prison_id" INT NOT NULL,
     CONSTRAINT "warden_prison_id_pk"
@@ -209,7 +209,7 @@ CREATE TABLE "oversees" (
 
 CREATE TABLE "smuggler" (
     "smuggler_id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    "name" VARCHAR(64) NOT NULL,
+    "smuggler_name" VARCHAR(64) NOT NULL,
     "surname" VARCHAR(64) NOT NULL,
     "phone_number" VARCHAR(13) NOT NULL,
     "iban" VARCHAR2(34), -- We don't need his IBAN if he doesn't want to get paid
@@ -247,7 +247,7 @@ CREATE TABLE "partnership" (
 
 CREATE TABLE "customer" (
     "customer_id" INT GENERATED ALWAYS AS IDENTITY NOT NULL PRIMARY KEY,
-    "name" VARCHAR(64) NOT NULL,
+    "customer_name" VARCHAR(64) NOT NULL,
     "surname" VARCHAR(64) NOT NULL,
     "prison_id" INT,
     "cell_number" INT,
@@ -277,7 +277,7 @@ CREATE TABLE "order" (
 
 CREATE TABLE "pastry" (
     "pastry_id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
-    "name" VARCHAR(255) NOT NULL,
+    "pastry_name" VARCHAR(255) NOT NULL,
     "type" VARCHAR(64) NOT NULL,
     "width" INT NOT NULL,
     "height" INT NOT NULL,
@@ -288,7 +288,7 @@ CREATE TABLE "pastry" (
 
 CREATE TABLE "ingredient" (
     "ingredient_id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
-    "name" VARCHAR(255) NOT NULL,
+    "ingredient_name" VARCHAR(255) NOT NULL,
     "current_amount" INT NOT NULL,
     "unit" VARCHAR(4) NOT NULL
             CHECK("unit" IN ('pcs', 'g', 'kg', 'ml', 'l', 'mm', 'm', 'mm^2', 'm^2')),
@@ -309,7 +309,7 @@ CREATE TABLE "pastry_ingredients" (
 
 CREATE TABLE "allergen" (
     "allergen_id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
-    "name" VARCHAR(255) NOT NULL,
+    "allergen_name" VARCHAR(255) NOT NULL,
     "description" VARCHAR2(2048)
 );
 
@@ -327,7 +327,7 @@ CREATE TABLE "ingredient_allergen" (
 
 CREATE TABLE "item" (
     "item_id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
-    "name" VARCHAR(255) NOT NULL,
+    "item_name" VARCHAR(255) NOT NULL,
     "description" VARCHAR2(2048),
     "width" INT NOT NULL,
     "height" INT NOT NULL,
@@ -362,23 +362,23 @@ CREATE TABLE "order_content" (
 --------------------------------------------------------------------------------
 
 -- Insert some ingredients
-INSERT INTO "ingredient" ("name", "current_amount", "unit", "buying_price")
+INSERT INTO "ingredient" ("ingredient_name", "current_amount", "unit", "buying_price")
         VALUES ('flour', '10', 'kg', '0.3');
-INSERT INTO "ingredient" ("name", "current_amount", "unit", "buying_price")
+INSERT INTO "ingredient" ("ingredient_name", "current_amount", "unit", "buying_price")
         VALUES ('egg', '83', 'pcs', '0.05');
-INSERT INTO "ingredient" ("name", "current_amount", "unit", "buying_price")
+INSERT INTO "ingredient" ("ingredient_name", "current_amount", "unit", "buying_price")
         VALUES ('yeast', '1283', 'g', '0.016');
-INSERT INTO "ingredient" ("name", "current_amount", "unit", "buying_price")
+INSERT INTO "ingredient" ("ingredient_name", "current_amount", "unit", "buying_price")
         VALUES ('garlic', '300', 'g', '0.023');
 
 -- Insert allergens
-INSERT INTO "allergen" ("name", "description") VALUES ('gluten', '');
-INSERT INTO "allergen" ("name", "description") VALUES ('eggs', '');
-INSERT INTO "allergen" ("name", "description") VALUES ('lupin', '');
-INSERT INTO "allergen" ("name", "description") VALUES ('milk', '');
-INSERT INTO "allergen" ("name", "description") VALUES ('nuts', '');
-INSERT INTO "allergen" ("name", "description") VALUES ('peanuts', '');
-INSERT INTO "allergen" ("name", "description") VALUES ('soy', '');
+INSERT INTO "allergen" ("allergen_name", "description") VALUES ('gluten', '');
+INSERT INTO "allergen" ("allergen_name", "description") VALUES ('eggs', '');
+INSERT INTO "allergen" ("allergen_name", "description") VALUES ('lupin', '');
+INSERT INTO "allergen" ("allergen_name", "description") VALUES ('milk', '');
+INSERT INTO "allergen" ("allergen_name", "description") VALUES ('nuts', '');
+INSERT INTO "allergen" ("allergen_name", "description") VALUES ('peanuts', '');
+INSERT INTO "allergen" ("allergen_name", "description") VALUES ('soy', '');
 
 -- Connect ingredients and allergens
 INSERT INTO "ingredient_allergen" ("ingredient_id", "allergen_id")
@@ -395,9 +395,9 @@ INSERT INTO "ingredient_allergen" ("ingredient_id", "allergen_id")
         VALUES(3, 7); -- yeast:soy
 
 -- Insert some pastries
-INSERT INTO "pastry" ("name", "type", "width", "height", "length", "weight", "selling_price")
+INSERT INTO "pastry" ("pastry_name", "type", "width", "height", "length", "weight", "selling_price")
         VALUES ('classic bread', 'bread', 200, 150, 400, '1000', 60);
-INSERT INTO "pastry" ("name", "type", "width", "height", "length", "weight", "selling_price")
+INSERT INTO "pastry" ("pastry_name", "type", "width", "height", "length", "weight", "selling_price")
         VALUES ('garlic bread', 'bread', 120, 100, 250, '500', 45);
 
 -- Connect pastries to ingredients
@@ -418,15 +418,15 @@ INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
 
 -- Insert some items that can be baked into a pastry
 -- First, insert "None" item to the "items" table
-INSERT INTO "item" ("name", "description", "width", "length", "height", "buying_price", "selling_price")
+INSERT INTO "item" ("item_name", "description", "width", "length", "height", "buying_price", "selling_price")
         VALUES('none', '', 0, 0, 0, 0, 0);
-INSERT INTO "item" ("name", "description", "width", "length", "height", "buying_price", "selling_price")
+INSERT INTO "item" ("item_name", "description", "width", "length", "height", "buying_price", "selling_price")
         VALUES('knife', 'kitchen knife', 18, 200, 24, 380, 600);
-INSERT INTO "item" ("name", "description", "width", "length", "height", "buying_price", "selling_price")
+INSERT INTO "item" ("item_name", "description", "width", "length", "height", "buying_price", "selling_price")
         VALUES('wrench', 'M8 stainless steel metric wrench', 8, 122, 40, 400, 549);
-INSERT INTO "item" ("name", "description", "width", "length", "height", "buying_price", "selling_price")
+INSERT INTO "item" ("item_name", "description", "width", "length", "height", "buying_price", "selling_price")
         VALUES('scalpel', 'carbonated steel with anti-slip handle', 10, 100, 10, 180, 299);
-INSERT INTO "item" ("name", "description", "width", "length", "height", "buying_price", "selling_price")
+INSERT INTO "item" ("item_name", "description", "width", "length", "height", "buying_price", "selling_price")
         VALUES('screwdriver', 'phillips screwdriver #4', 34, 274, 34, 1400, 1499);
 
 -- Initialize two prisons
@@ -436,19 +436,19 @@ INSERT INTO "prison" ("city", "zip", "street", "street_number")
         VALUES ('Košice', '04020', 'Lunícka', '9');
 
 -- Initialize some wardens
-INSERT INTO "warden" ("name", "surname", "prison_id")
+INSERT INTO "warden" ("warden_name", "surname", "prison_id")
         VALUES ('John', 'Eyeless', 1); -- John at Leopoldov
-INSERT INTO "warden" ("name", "surname", "prison_id")
+INSERT INTO "warden" ("warden_name", "surname", "prison_id")
         VALUES ('Bob', 'Guard', 1); -- Bob at Leopoldov
-INSERT INTO "warden" ("name", "surname", "prison_id")
+INSERT INTO "warden" ("warden_name", "surname", "prison_id")
         VALUES ('Natalie', 'Harsh', 2); -- Natalie at Košice
 
 -- Initialize some smugglers
-INSERT INTO "smuggler" ("name", "surname", "phone_number", "birth_number")
+INSERT INTO "smuggler" ("smuggler_name", "surname", "phone_number", "birth_number")
         VALUES ('Sam', 'Sneaky', '+421944333666', 9410166606);
-INSERT INTO "smuggler" ("name", "surname", "phone_number", "iban", "birth_number")
+INSERT INTO "smuggler" ("smuggler_name", "surname", "phone_number", "iban", "birth_number")
         VALUES ('Jack', 'Quiet', '+420111222333', 'CZ6250512664395318196669', 9801041444);
-INSERT INTO "smuggler" ("name", "surname", "phone_number", "birth_number")
+INSERT INTO "smuggler" ("smuggler_name", "surname", "phone_number", "birth_number")
         VALUES ('Mary', 'Persuasive', '+421944444555', 8803036606);
 
 -- Connect smugglers to prisons (partnership)
@@ -505,15 +505,15 @@ INSERT INTO "oversees" ("warden_id", "shift_id")
         VALUES(3, 6);
 
 -- Initialize some customers
-INSERT INTO "customer" ("name", "surname", "prison_id", "cell_number", "cell_type")
+INSERT INTO "customer" ("customer_name", "surname", "prison_id", "cell_number", "cell_type")
         VALUES('James', 'Junkie', 1, 42, 'general'); -- James at Leopoldov #42
-INSERT INTO "customer" ("name", "surname", "prison_id", "cell_number", "cell_type")
+INSERT INTO "customer" ("customer_name", "surname", "prison_id", "cell_number", "cell_type")
         VALUES('Michael', 'Robber', 1, 169, 'general'); -- Michael at Leopoldov #169
-INSERT INTO "customer" ("name", "surname", "prison_id", "cell_number", "cell_type")
+INSERT INTO "customer" ("customer_name", "surname", "prison_id", "cell_number", "cell_type")
         VALUES('Richard', 'Kidnapper', 1, 4, 'solitary'); -- Richard at Leopoldov #4
-INSERT INTO "customer" ("name", "surname", "prison_id", "cell_number", "cell_type")
+INSERT INTO "customer" ("customer_name", "surname", "prison_id", "cell_number", "cell_type")
         VALUES('Elizabeth', 'Kill', 2, 1173, 'general'); -- Elizabeth at Košice #1173
-INSERT INTO "customer" ("name", "surname", "prison_id", "cell_number", "cell_type")
+INSERT INTO "customer" ("customer_name", "surname", "prison_id", "cell_number", "cell_type")
         VALUES('Susan', 'Innocent', 2, 17, 'protective'); --  Susan at Košice #17
 
 -- Create some orders
