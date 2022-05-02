@@ -609,15 +609,21 @@ INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
         -- Richard at Košice orders classic bread with a screwdriver inside and
         -- four garlic breads, one with scalpel inside, three empty
 
+--------------------------------------------------------------------------------
+-- Materialized views and permissions for Richard Kidnapper (XSKALO01)
+--------------------------------------------------------------------------------
+
 DROP MATERIALIZED VIEW richards_orders;
 CREATE MATERIALIZED VIEW richards_orders AS
-    SELECT O."order_datetime",O."delivery_datetime",O."delivery_method", C."amount", P."pastry_name", I."item_name"
+    SELECT O."order_datetime", O."delivery_datetime", O."delivery_method", 
+            C."amount", P."pastry_name", I."item_name"
     FROM "order" O , "order_content" C , "pastry" P , "item" I
     WHERE "customer_id" = 3
-      AND O."order_id" = C."order_id" AND C."pastry_id" = P."pastry_id" AND C."item_id" = I."item_id";
+        AND O."order_id" = C."order_id" 
+        AND C."pastry_id" = P."pastry_id" 
+        AND C."item_id" = I."item_id";
 GRANT SELECT ON richards_orders TO XSKALO01;
 GRANT INSERT ON richards_orders TO XSKALO01;
-
 
 DROP VIEW safe_pastry;
 CREATE VIEW safe_pastry AS
