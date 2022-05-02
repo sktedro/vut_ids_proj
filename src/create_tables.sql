@@ -611,8 +611,10 @@ INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
 
 drop materialized view richards_orders;
 CREATE materialized view richards_orders as
-    SELECT O."order_datetime",O."delivery_datetime",O."delivery_method", C."amount", P."pastry_name"
-    FROM "order" O NATURAL JOIN "order_content" C NATURAL JOIN "pastry" P WHERE "customer_id" = 3;
+    SELECT O."order_datetime",O."delivery_datetime",O."delivery_method", C."amount", P."pastry_name", I."item_name"
+    FROM "order" O , "order_content" C , "pastry" P , "item" I
+    WHERE "customer_id" = 3
+      and O."order_id" = C."order_id" and C."pastry_id" = P."pastry_id" and C."item_id" = I."item_id";
 GRANT SELECT ON richards_orders TO XSKALO01;
 GRANT INSERT ON richards_orders TO XSKALO01;
 
