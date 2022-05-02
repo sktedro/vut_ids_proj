@@ -619,12 +619,12 @@ GRANT INSERT ON richards_orders TO XSKALO01;
 
 
 DROP VIEW safe_pastry;
-CREATE VIEW safe_pastry as
+CREATE VIEW safe_pastry AS
 SELECT "pastry_name", "weight", "type", "selling_price" FROM "pastry";
 GRANT SELECT ON safe_pastry TO XSKALO01;
 
 DROP VIEW safe_items;
-CREATE VIEW safe_items as
+CREATE VIEW safe_items AS
 SELECT "item_name", "description", "selling_price" FROM "item";
 GRANT SELECT ON safe_items TO XSKALO01;
 
