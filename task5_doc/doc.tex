@@ -53,19 +53,20 @@
 
   \subsection{Procedúra 2: \textit{NUM\_OF\_HOURS}}
   Naša druhá funkcia počíta a vracia počet hodín, ktoré strážnik odpracoval
-  od istého dátumu a času do konca toho mesiaca. Funkcia používa kurzor 
+  do istého dátumu a času od začiatku toho mesiaca. Funkcia používa kurzor 
   \textit{hours}, v ktorom sú časy začiatku a konca smeny daného strážnika v 
   daný mesiac. Funkcia taktiež používa premennú \textit{shift\_info}, ktorá je
   takého dátového typu, ako riadky vrátené kurzorom (pomocou \textit{\%ROWTYPE}).
 
 
   \section{Index}
-  Index sme nedokázali naprogramovať.
+  Index sme nedokázali naprogramovať. V nasledujúcej sekcii spomenieme náš nápad
+  na indexáciu.
 
 
   \section{EXPLAIN PLAN}
-  EXPLAIN PLAN exportovaný pre príkaz SELECT, ktorý vráti počty väzňov vo 
-  všetkých väzeniach v databáze:
+  EXPLAIN PLAN exportovaný pre príkaz SELECT, ktorý vráti počty väzňov pre každú
+  väznicu v databáze:
 
   \begin{verbatim}
     Plan hash value: 2904766977
@@ -95,7 +96,8 @@
   \end{verbatim}
 
   Žiaden ďalší ESCAPE PLAN sme negenerovali, keďže sa nám nepodarilo vytvoriť 
-  žiaden index.
+  žiaden index. Našim plánom však bolo indexovať podľa identifikačných čísel
+  väzníc.
 
 
   \section{Definícia prístupových práv}
