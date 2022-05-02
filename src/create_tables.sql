@@ -173,6 +173,7 @@ BEGIN
     CLOSE hours;
     RETURN hour_sum;
 END NUM_OF_HOURS;
+
 --------------------------------------------------------------------------------
 -- Clear old table data if there is any
 --------------------------------------------------------------------------------
@@ -392,21 +393,21 @@ CREATE TABLE "order_content" (
 -- Create triggers
 --------------------------------------------------------------------------------
 
-CREATE or replace trigger update_ingredient_amounts
-    after insert ON "order_content"
-    referencing new as new
-    for each row
-begin
-    for ingredient in (
+CREATE OR REPLACE TRIGGER update_ingredient_amounts
+    AFTER INSERT ON "order_content"
+    REFERENCING new AS new
+    FOR EACH ROW
+BEGIN
+    FOR ingredient IN (
         SELECT "amount_in_pastry", "current_amount", "ingredient_id"
-     FROM "pastry_ingredients" natural join "ingredient"
+     FROM "pastry_ingredients" NATURAL JOIN "ingredient"
         WHERE "pastry_ingredients"."pastry_id" = :new."pastry_id"
-        ) loop
+        ) LOOP
         UPDATE "ingredient" I
             SET I."current_amount" = TO_NUMBER(I."current_amount" - ingredient."amount_in_pastry" * :new."amount")
             WHERE ingredient."ingredient_id" = I."ingredient_id";
-    end loop;
-end;
+    END LOOP;
+END;
 
 --------------------------------------------------------------------------------
 -- Insert some data
@@ -608,24 +609,23 @@ INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
         -- Richard at Košice orders classic bread with a screwdriver inside and
         -- four garlic breads, one with scalpel inside, three empty
 
-
-drop materialized view richards_orders;
-CREATE materialized view richards_orders as
+DROP MATERIALIZED VIEW richards_orders;
+CREATE MATERIALIZED VIEW richards_orders AS
     SELECT O."order_datetime",O."delivery_datetime",O."delivery_method", C."amount", P."pastry_name", I."item_name"
     FROM "order" O , "order_content" C , "pastry" P , "item" I
     WHERE "customer_id" = 3
-      and O."order_id" = C."order_id" and C."pastry_id" = P."pastry_id" and C."item_id" = I."item_id";
+      AND O."order_id" = C."order_id" AND C."pastry_id" = P."pastry_id" AND C."item_id" = I."item_id";
 GRANT SELECT ON richards_orders TO XSKALO01;
 GRANT INSERT ON richards_orders TO XSKALO01;
 
 
 DROP VIEW safe_pastry;
-CREATE VIEW safe_pastry as
+CREATE VIEW safe_pastry AS
 SELECT "pastry_name", "weight", "type", "selling_price" FROM "pastry";
 GRANT SELECT ON safe_pastry TO XSKALO01;
 
 DROP VIEW safe_items;
-CREATE VIEW safe_items as
+CREATE VIEW safe_items AS
 SELECT "item_name", "description", "selling_price" FROM "item";
 GRANT SELECT ON safe_items TO XSKALO01;
 

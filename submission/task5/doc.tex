@@ -1,0 +1,122 @@
+%! Authors: Patrik Skaloš, Dziyana Khrystsiuk
+
+% Preamble
+\documentclass[a4paper]{article}
+
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[total={18cm, 25cm}]{geometry}
+% \usepackage{amsmath, amssymb, amsthm}
+% \usepackage[unicode]{hyperref}
+% \usepackage{graphicx}
+
+
+% Title
+\title{Dokumentace popisující finální schéma databáze}
+\author{Dziyana Khrystsiuk (xkhrys00) \\ Patrik Skaloš (xskalo01)}
+\date{}
+
+
+% Document
+\begin{document}
+
+  \maketitle
+
+
+  \section{Triggre}
+
+  \subsection{Trigger 1}
+  Rozhodli sme sa pridať takú funkcionalitu, že po vytvorení objednávky (ktorá
+  už nemôže byť zrušená) sa zo skladu odčíta taký počet surovín, aký je potrebný
+  na upečenie objednaného pečiva. Ak si teda napríklad zákazník objedná jeden 
+  chlieb, na ktorý je okrem iného potreba 500 gramov múky, z aktuálneho množstva
+  múky na sklade sa 500 gramov odčíta. To sa ale nedeje pre predmety, ktoré môžu
+  byť v pečive zapečené, keďže tie sa nakupujú až po prijatí objednávky.
+
+  \subsection{Trigger 2}
+  Druhý trigger sme naprogramovať nestihli a predpokladali sme, že to nie je
+  také dôležité, keď sme už tým prvým ukázali, že tomu rozumieme.
+
+
+  \section{Procedúry}
+
+  \subsection{Procedúra 1: \textit{SIZE\_CHK}}
+  Naša prvá procedúra (funkcia) je zodpovedná za overenie, či sa predmet naviac
+  (ktorý má byť zapečený do pečiva) svojimi rozmermi do pečiva vojde. Napríklad,
+  ak predávame chlieb s rozmermi 200x200x200mm a zákazník si chce objednať 
+  šrubovák s rozmermi 300x50x50mm, procedúra vráti hodnotu \verb|1| na miesto
+  hodnoty \verb|0|. Vďaka tejto funkcii užívateľ nemôže vytvoriť objednávku s
+  takými pármi pečív a predmetov, v ktorých sa predmet nevojde do pečiva celý.
+
+  \subsection{Procedúra 2: \textit{NUM\_OF\_HOURS}}
+  Naša druhá funkcia počíta a vracia počet hodín, ktoré strážnik odpracoval
+  od istého dátumu a času do konca toho mesiaca. Funkcia používa kurzor 
+  \textit{hours}, v ktorom sú časy začiatku a konca smeny daného strážnika v 
+  daný mesiac. Funkcia taktiež používa premennú \textit{shift\_info}, ktorá je
+  takého dátového typu, ako riadky vrátené kurzorom (pomocou \textit{\%ROWTYPE}).
+
+
+  \section{Index}
+  Index sme nedokázali naprogramovať.
+
+
+  \section{EXPLAIN PLAN}
+  EXPLAIN PLAN exportovaný pre príkaz SELECT, ktorý vráti počty väzňov vo 
+  všetkých väzeniach v databáze:
+
+  \begin{verbatim}
+    Plan hash value: 2904766977
+
+    -----------------------------------------------------------------------------------------------
+    | Id  | Operation                    | Name           | Rows  | Bytes | Cost (%CPU)| Time     |
+    -----------------------------------------------------------------------------------------------
+    |   0 | SELECT STATEMENT             |                |     5 |   600 |     5  (20)| 00:00:01 |
+    |   1 |  NESTED LOOPS                |                |     5 |   600 |     5  (20)| 00:00:01 |
+    |   2 |   NESTED LOOPS               |                |     5 |   600 |     5  (20)| 00:00:01 |
+    |   3 |    VIEW                      | VW_GBF_7       |     5 |   130 |     4  (25)| 00:00:01 |
+    |   4 |     HASH GROUP BY            |                |     5 |    65 |     4  (25)| 00:00:01 |
+    |   5 |      TABLE ACCESS FULL       | customer       |     5 |    65 |     3   (0)| 00:00:01 |
+    |*  6 |    INDEX UNIQUE SCAN         | SYS_C002006943 |     1 |       |     0   (0)| 00:00:01 |
+    |   7 |   TABLE ACCESS BY INDEX ROWID| prison         |     1 |    94 |     1   (0)| 00:00:01 |
+    -----------------------------------------------------------------------------------------------
+
+    Predicate Information (identified by operation id):
+    ---------------------------------------------------
+
+    "   6 - access(""P"".""prison_id""=""ITEM_1"")"
+
+    Note
+    -----
+      - dynamic statistics used: dynamic sampling (level=2)
+      - this is an adaptive plan
+  \end{verbatim}
+
+  Žiaden ďalší ESCAPE PLAN sme negenerovali, keďže sa nám nepodarilo vytvoriť 
+  žiaden index.
+
+
+  \section{Definícia prístupových práv}
+  Patrikovi Skalošovi sme dali prístupové práva ako väzňovi (zákazníkovi):
+
+  Môže čítať len jeho vlastné objednávky a prehliadať ponúkané pečivo a predmety
+  s tým, že sa mu zobrazia iba informácie dôležité pre zákazníkov.
+
+
+  \section{Materializovaný pohľad}
+  Náš materializovaný pohľad vytvorený pre Patrika Skaloša ako zákazníka 
+  Richarda mu poskytuje informácie o všetkých jeho objednávkach a o ničom inom.
+  Stĺpce tohto pohľadu teda sú: Dátum a čas objednávky, očakávaný (ak je v
+  minulosti, tak pravdivý) dátum doručenia, spôsob doručenia a obsah objednávky.
+
+
+  \vspace{1in}
+
+  PS: Server bol počas vývoja extrémne pomalý, bežne trvalo 5 minút na vykonanie
+  jedného jednoduchého príkazu INSERT či SELECT, čo značne sťažilo možnosť
+  testovať túto časť projektu a preto sme jej väčšinu ani neotestovali a
+  nedokončili.
+
+\end{document}
