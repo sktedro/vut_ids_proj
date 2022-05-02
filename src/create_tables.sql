@@ -143,6 +143,36 @@ BEGIN
 
 END SIZE_CHK;
 
+CREATE OR REPLACE FUNCTION NUM_OF_HOURS(
+    "up_to_date" TIMESTAMP,
+    "warden_id" INT
+) RETURN NUMBER DETERMINISTIC IS
+    hour_sum NUMBER := 0;
+    diff INTERVAL DAY(2) TO SECOND;
+    CURSOR hours IS
+        SELECT "start_datetime","end_datetime"
+        FROM "oversees" O NATURAL JOIN "shift" S
+        WHERE O."warden_id" = "warden_id"
+          AND to_char(S."end_datetime",'YYYY-MM') = to_char("up_to_date", 'YYYY-MM');
+    shift_info hours%ROWTYPE;
+
+BEGIN
+    OPEN hours;
+    LOOP
+        FETCH hours INTO shift_info;
+        IF to_char(shift_info."start_datetime",'DD') > to_char("up_to_date", 'DD') THEN
+            --EXIT;
+            CONTINUE;
+        END IF;
+        diff := (shift_info."end_datetime" - shift_info."start_datetime");
+        hour_sum := hour_sum + (EXTRACT(DAY FROM diff) * 24 + EXTRACT(HOUR FROM diff));
+
+        --EXIT WHEN hours%NOTFOUND;
+        EXIT;
+    END LOOP;
+    CLOSE hours;
+    RETURN hour_sum;
+END NUM_OF_HOURS;
 --------------------------------------------------------------------------------
 -- Clear old table data if there is any
 --------------------------------------------------------------------------------
@@ -289,7 +319,7 @@ CREATE TABLE "pastry" (
 CREATE TABLE "ingredient" (
     "ingredient_id" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
     "ingredient_name" VARCHAR(255) NOT NULL,
-    "current_amount" INT NOT NULL,
+    "current_amount" NUMBER NOT NULL,
     "unit" VARCHAR(4) NOT NULL
             CHECK("unit" IN ('pcs', 'g', 'kg', 'ml', 'l', 'mm', 'm', 'mm^2', 'm^2')),
     "buying_price" NUMBER(*, 4) NOT NULL
@@ -298,6 +328,7 @@ CREATE TABLE "ingredient" (
 CREATE TABLE "pastry_ingredients" (
     "pastry_id" INT NOT NULL,
     "ingredient_id" INT NOT NULL,
+    "amount_in_pastry" NUMBER NOT NULL,
     PRIMARY KEY ("pastry_id","ingredient_id"),
     CONSTRAINT "pastry_ingredients_ingredient_id_fk"
             FOREIGN KEY ("ingredient_id") REFERENCES "ingredient" ("ingredient_id")
@@ -358,6 +389,26 @@ CREATE TABLE "order_content" (
 );
 
 --------------------------------------------------------------------------------
+-- Create triggers
+--------------------------------------------------------------------------------
+
+CREATE or replace trigger update_ingredient_amounts
+    after insert ON "order_content"
+    referencing new as new
+    for each row
+begin
+    for ingredient in (
+        SELECT "amount_in_pastry", "current_amount", "ingredient_id"
+     FROM "pastry_ingredients" natural join "ingredient"
+        WHERE "pastry_ingredients"."pastry_id" = :new."pastry_id"
+        ) loop
+        UPDATE "ingredient" I
+            SET I."current_amount" = TO_NUMBER(I."current_amount" - ingredient."amount_in_pastry" * :new."amount")
+            WHERE ingredient."ingredient_id" = I."ingredient_id";
+    end loop;
+end;
+
+--------------------------------------------------------------------------------
 -- Insert some data
 --------------------------------------------------------------------------------
 
@@ -369,7 +420,7 @@ INSERT INTO "ingredient" ("ingredient_name", "current_amount", "unit", "buying_p
 INSERT INTO "ingredient" ("ingredient_name", "current_amount", "unit", "buying_price")
         VALUES ('yeast', '1283', 'g', '0.016');
 INSERT INTO "ingredient" ("ingredient_name", "current_amount", "unit", "buying_price")
-        VALUES ('garlic', '300', 'g', '0.023');
+        VALUES ('garlic', '500', 'g', '0.023');
 
 -- Insert allergens
 INSERT INTO "allergen" ("allergen_name", "description") VALUES ('gluten', '');
@@ -401,20 +452,20 @@ INSERT INTO "pastry" ("pastry_name", "type", "width", "height", "length", "weigh
         VALUES ('garlic bread', 'bread', 120, 100, 250, '500', 45);
 
 -- Connect pastries to ingredients
-INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
-        VALUES(1, 1); -- classic_bread:flour
-INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
-        VALUES(1, 2); -- classic_bread:egg
-INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
-        VALUES(1, 3); -- classic_bread:yeast
-INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
-        VALUES(2, 1); -- garlic_bread:flour
-INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
-        VALUES(2, 2); -- garlic_bread:egg
-INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
-        VALUES(2, 3); -- garlic_bread:yeast
-INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id")
-        VALUES(2, 4); -- garlic_bread:garlic
+INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id", "amount_in_pastry")
+        VALUES(1, 1, 0.5); -- classic_bread:flour
+INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id", "amount_in_pastry")
+        VALUES(1, 2, 4); -- classic_bread:egg
+INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id", "amount_in_pastry")
+        VALUES(1, 3, 40); -- classic_bread:yeast
+INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id", "amount_in_pastry")
+        VALUES(2, 1, 0.25); -- garlic_bread:flour
+INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id", "amount_in_pastry")
+        VALUES(2, 2, 2); -- garlic_bread:egg
+INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id", "amount_in_pastry")
+        VALUES(2, 3, 20); -- garlic_bread:yeast
+INSERT INTO "pastry_ingredients" ("pastry_id", "ingredient_id", "amount_in_pastry")
+        VALUES(2, 4, 42); -- garlic_bread:garlic
 
 -- Insert some items that can be baked into a pastry
 -- First, insert "None" item to the "items" table
@@ -487,6 +538,11 @@ INSERT INTO "shift" ("start_datetime", "end_datetime")
 INSERT INTO "shift" ("start_datetime", "end_datetime")
         VALUES(TIMESTAMP '2020-04-03 12:00:00', TIMESTAMP '2020-04-03 20:00:00');
 
+-- -- In terms of testing new function, Natalie has 3x8 hours of shifts from 01-04-2020 to 03-04-2020
+-- INSERT INTO "shift" ("start_datetime", "end_datetime")
+--         VALUES(TIMESTAMP '2020-04-02 06:00:00', TIMESTAMP '2020-04-02 14:00:00');
+-- INSERT INTO "oversees" ("warden_id", "shift_id")
+--         VALUES(3, 7);
 -- Connect wardens to shifts
 -- John: every day at 6AM
 INSERT INTO "oversees" ("warden_id", "shift_id")
@@ -551,3 +607,24 @@ INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
         VALUES(3, 2, 1, 3);
         -- Richard at Košice orders classic bread with a screwdriver inside and
         -- four garlic breads, one with scalpel inside, three empty
+
+
+drop materialized view richards_orders;
+CREATE materialized view richards_orders
+refresh ON commit as
+    SELECT "order_datetime","delivery_datetime","delivery_method", "amount", "pastry_name"
+    FROM "order" O NATURAL JOIN "order_content" C NATURAL JOIN "pastry" P WHERE "customer_id" = 3;
+GRANT SELECT ON richards_orders TO XSKALO01;
+GRANT INSERT ON richards_orders TO XSKALO01;
+
+
+DROP VIEW safe_pastry;
+CREATE VIEW safe_pastry as
+SELECT "pastry_name", "weight", "type", "selling_price" FROM "pastry";
+GRANT SELECT ON safe_pastry TO XSKALO01;
+
+DROP VIEW safe_items;
+CREATE VIEW safe_items as
+SELECT "item_name", "description", "selling_price" FROM "item";
+GRANT SELECT ON safe_items TO XSKALO01;
+

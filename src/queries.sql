@@ -21,9 +21,12 @@ SELECT A."allergen_name" FROM "allergen" A
     WHERE I."ingredient_name" = 'yeast';
 
 -- List how many customers do individual prisons have
+EXPLAIN PLAN FOR
 SELECT "city", "street", "street_number", COUNT(*) AS "customer_count"
     FROM "prison" P JOIN "customer" ON P."prison_id" = "customer"."prison_id"
     GROUP BY P."prison_id", "city", "street", "street_number";
+
+SELECT PLAN_TABLE_OUTPUT FROM TABLE(DBMS_XPLAN.DISPLAY());
 
 -- Count how many hours have individual wardens worked until now
 SELECT "warden_name", "surname", SUM(EXTRACT(DAY FROM "hours_sum") * 24 + EXTRACT(HOUR FROM "hours_sum")) AS "hours_sum"
@@ -51,3 +54,5 @@ SELECT "ingredient_name"
                 FROM "pastry" NATURAL JOIN "pastry_ingredients" NATURAL JOIN "ingredient"
                 WHERE "pastry_name" = 'classic bread'
             );
+
+-- SELECT "warden_name", "surname", NUM_OF_HOURS(TIMESTAMP '2020-04-03 00:00:00',"warden_id") from "warden";
