@@ -173,6 +173,7 @@ BEGIN
     CLOSE hours;
     RETURN hour_sum;
 END NUM_OF_HOURS;
+
 --------------------------------------------------------------------------------
 -- Clear old table data if there is any
 --------------------------------------------------------------------------------
@@ -392,21 +393,21 @@ CREATE TABLE "order_content" (
 -- Create triggers
 --------------------------------------------------------------------------------
 
-CREATE or replace trigger update_ingredient_amounts
-    after insert ON "order_content"
-    referencing new as new
-    for each row
-begin
-    for ingredient in (
+CREATE OR REPLACE TRIGGER update_ingredient_amounts
+    AFTER INSERT ON "order_content"
+    REFERENCING new AS new
+    FOR EACH ROW
+BEGIN
+    FOR ingredient IN (
         SELECT "amount_in_pastry", "current_amount", "ingredient_id"
-     FROM "pastry_ingredients" natural join "ingredient"
+     FROM "pastry_ingredients" NATURAL JOIN "ingredient"
         WHERE "pastry_ingredients"."pastry_id" = :new."pastry_id"
-        ) loop
+        ) LOOP
         UPDATE "ingredient" I
             SET I."current_amount" = TO_NUMBER(I."current_amount" - ingredient."amount_in_pastry" * :new."amount")
             WHERE ingredient."ingredient_id" = I."ingredient_id";
-    end loop;
-end;
+    END LOOP;
+END;
 
 --------------------------------------------------------------------------------
 -- Insert some data
@@ -609,8 +610,8 @@ INSERT INTO "order_content" ("order_id", "pastry_id", "item_id", "amount")
         -- four garlic breads, one with scalpel inside, three empty
 
 
-drop materialized view richards_orders;
-CREATE materialized view richards_orders as
+DROP MATERIALIZED VIEW richards_orders;
+CREATE MATERIALIZED VIEW richards_orders AS
     SELECT O."order_datetime",O."delivery_datetime",O."delivery_method", C."amount", P."pastry_name"
     FROM "order" O NATURAL JOIN "order_content" C NATURAL JOIN "pastry" P WHERE "customer_id" = 3;
 GRANT SELECT ON richards_orders TO XSKALO01;
